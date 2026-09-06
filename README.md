@@ -36,13 +36,13 @@ cp .env.example .env
 #    Обязательно: Dockerfile ставит пакеты из dist/*.whl, а dist/ в .gitignore,
 #    поэтому при клонировании проекта без этого шага сборка упадёт.
 #    также, необходимо каждый раз пересобирать whl, чтоб подтянулись новые изменения в сервисах
-make build          # оба сервиса
+make build # оба сервиса
 # по отдельности:
 make build-inventory
 make build-analytics
 
 # 3. Поднятие стека: две Postgres, Redis и оба сервиса
-docker compose up -d --build
+make up # docker compose up -d --build
 ```
 
 Миграции применяются автоматически: `entrypoint.sh` в каждом контейнере ждёт
