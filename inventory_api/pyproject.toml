@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inventory-api"
+version = "0.1.0"
+description = "Inventory REST API: приём, расход, остатки + Redis outbox"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic==1.19.1",
+    "aiohttp==3.14.3",
+    "sqlalchemy[asyncio]==2.0.52",
+    "asyncpg==0.31.0",
+    "redis==5.3.1",
+    "pydantic==2.13.5",
+    "pydantic-settings==2.15.0",
+    "aiohttp-swagger3==0.10.0",
+    "PyYAML==6.0.3",
+    "fastjsonschema==2.19.1",
+    "rfc3339-validator==0.1.4",
+    "attrs==26.1.0",
+]
+
+[project.scripts]
+inventory-server = "inventory_api.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+inventory_api = ["components.yaml"]

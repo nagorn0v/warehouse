@@ -1,0 +1,124 @@
+components:
+  schemas:
+    StockOpIn:
+      type: object
+      required:
+        - sku
+        - qty
+        - warehouse
+      properties:
+        sku:
+          type: string
+          minLength: 1
+        qty:
+          type: integer
+          minimum: 1
+        warehouse:
+          type: string
+          minLength: 1
+    StockOpOut:
+      type: object
+      required:
+        - id
+        - sku
+        - qty
+        - warehouse
+        - created_at
+      properties:
+        id:
+          type: integer
+        sku:
+          type: string
+        qty:
+          type: integer
+        warehouse:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    StockSnapshot:
+      type: object
+      required:
+        - warehouse
+        - sku
+        - qty
+      properties:
+        warehouse:
+          type: string
+        sku:
+          type: string
+        qty:
+          type: integer
+    StockLine:
+      type: object
+      required:
+        - sku
+        - qty
+      properties:
+        sku:
+          type: string
+        qty:
+          type: integer
+    StockList:
+      type: object
+      required:
+        - warehouse
+        - skus
+      properties:
+        warehouse:
+          type: string
+        skus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockLine"
+    WarehouseSummary:
+      type: object
+      required:
+        - warehouse
+        - total_qty
+        - sku_count
+      properties:
+        warehouse:
+          type: string
+        total_qty:
+          type: integer
+        sku_count:
+          type: integer
+    WarehouseQty:
+      type: object
+      required:
+        - warehouse
+        - qty
+      properties:
+        warehouse:
+          type: string
+        qty:
+          type: integer
+    TopSku:
+      type: object
+      required:
+        - sku
+        - total_qty
+      properties:
+        sku:
+          type: string
+        total_qty:
+          type: integer
+        warehouses:
+          type: array
+          items:
+            $ref: "#/components/schemas/WarehouseQty"
+    StockSummary:
+      type: object
+      required:
+        - warehouses
+        - top_skus
+      properties:
+        warehouses:
+          type: array
+          items:
+            $ref: "#/components/schemas/WarehouseSummary"
+        top_skus:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopSku"

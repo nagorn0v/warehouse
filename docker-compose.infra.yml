@@ -1,0 +1,74 @@
+services:
+  # Источник правды для inventory_api (source of truth)
+  postgres-inventory:
+    image: postgres:16-alpine
+    container_name: warehouse-postgres-inventory
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${INVENTORY_DB_NAME}
+      POSTGRES_USER: ${INVENTORY_DB_USER}
+      POSTGRES_PASSWORD: ${INVENTORY_DB_PASSWORD}
+    # Проброс на хост сдвинут на 55432 (5432 занят локальным postgres)
+    ports:
+      - "55432:5432"
+    volumes:
+      - pgdata-inventory:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${INVENTORY_DB_USER} -d $${INVENTORY_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - warehouse-net
+
+  # Кэш-БД агрегатов для analytics_worker (изолирована от inventory —
+  # падение одной БД не тянет за собой другой сервис)
+  postgres-analytics:
+    image: postgres:16-alpine
+    container_name: warehouse-postgres-analytics
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ANALYTICS_DB_NAME}
+      POSTGRES_USER: ${ANALYTICS_DB_USER}
+      POSTGRES_PASSWORD: ${ANALYTICS_DB_PASSWORD}
+    # Проброс на хост сдвинут на 55433 (5433 занят локальным postgres)
+    ports:
+      - "55433:5432"
+    volumes:
+      - pgdata-analytics:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${ANALYTICS_DB_USER} -d $${ANALYTICS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - warehouse-net
+
+  # Redis: транспорт сообщений между сервисами (Redis Streams)
+  redis:
+    image: redis:7-alpine
+    container_name: warehouse-redis
+    restart: unless-stopped
+    # AOF включён — события переживают рестарт контейнера
+    command: ["redis-server", "--appendonly", "yes"]
+    # Проброс на хост сдвинут на 56379 (6379 занят локальным redis)
+    ports:
+      - "56379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - warehouse-net
+
+networks:
+  warehouse-net:
+    driver: bridge
+
+volumes:
+  pgdata-inventory:
+  pgdata-analytics:
+  redisdata:

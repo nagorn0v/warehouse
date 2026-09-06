@@ -1,0 +1,52 @@
+include:
+  - docker-compose.infra.yml
+
+services:
+  # Тестовый прогон pytest против реальных postgres-analytics и redis.
+  # Запуск: docker compose -f docker-compose.tests.yml --profile tests run --rm analytics_worker_tests
+  analytics_worker_tests:
+    build:
+      context: ./analytics_worker
+      dockerfile: Dockerfile.dev
+    container_name: warehouse-analytics-worker-tests
+    profiles: ["tests"]
+    environment:
+      TEST_DATABASE_URL: postgresql+asyncpg://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASSWORD}@postgres-analytics:5432/analytics_test
+      DATABASE_URL: postgresql+asyncpg://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASSWORD}@postgres-analytics:5432/${ANALYTICS_DB_NAME}
+      REDIS_URL: ${REDIS_URL}
+      WAIT_FOR_HOSTS: postgres-analytics:5432 redis:6379
+    volumes:
+      - ./analytics_worker/src:/app/src
+      - ./analytics_worker/tests:/app/tests
+    depends_on:
+      postgres-analytics:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - warehouse-net
+
+  # Тестовый прогон pytest против реальных postgres-inventory и redis.
+  # Запуск: docker compose -f docker-compose.tests.yml --profile tests run --rm inventory_api_tests
+  inventory_api_tests:
+    build:
+      context: ./inventory_api
+      dockerfile: Dockerfile.dev
+    container_name: warehouse-inventory-api-tests
+    profiles: ["tests"]
+    environment:
+      TEST_DATABASE_URL: postgresql+asyncpg://${INVENTORY_DB_USER}:${INVENTORY_DB_PASSWORD}@postgres-inventory:5432/inventory_test
+      DATABASE_URL: postgresql+asyncpg://${INVENTORY_DB_USER}:${INVENTORY_DB_PASSWORD}@postgres-inventory:5432/${INVENTORY_DB_NAME}
+      REDIS_URL: ${REDIS_URL}
+      TEST_REDIS_URL: redis://redis:6379/1
+      WAIT_FOR_HOSTS: postgres-inventory:5432 redis:6379
+    volumes:
+      - ./inventory_api/src:/app/src
+      - ./inventory_api/tests:/app/tests
+    depends_on:
+      postgres-inventory:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - warehouse-net

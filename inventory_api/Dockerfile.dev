@@ -1,0 +1,33 @@
+# Самостоятельный тестовый образ: runtime deps + dev-tools + тесты
+FROM python:3.12-alpine AS builder
+
+RUN apk add --no-cache gcc musl-dev postgresql-dev
+
+COPY requirements.txt requirements-dev.txt .
+
+RUN pip install --prefix=/opt/deps -r requirements.txt -r requirements-dev.txt
+
+FROM python:3.12-alpine
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+COPY --from=builder /opt/deps /usr/local
+
+# Устанавливаем пакет из wheel; dev-инструменты (pytest, debugpy) уже в /opt/deps
+COPY dist/*.whl /tmp/
+RUN pip install --no-deps /tmp/*.whl
+
+COPY alembic.ini /app/alembic.ini
+COPY alembic /app/alembic
+COPY tests /app/tests
+COPY pytest.ini /app/pytest.ini
+
+# PYTHONPATH для тестового volume-mount src (правки кода подхватываются без пересборки)
+ENV PYTHONPATH=/app/src
+
+WORKDIR /app
+
+CMD ["pytest", "-v", "tests"]

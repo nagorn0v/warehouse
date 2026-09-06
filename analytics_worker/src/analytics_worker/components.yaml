@@ -1,0 +1,37 @@
+components:
+  schemas:
+    StockSnapshot:
+      type: object
+      required:
+        - warehouse
+        - sku
+        - qty
+      properties:
+        warehouse:
+          type: string
+        sku:
+          type: string
+        qty:
+          type: integer
+    StockLine:
+      type: object
+      required:
+        - sku
+        - qty
+      properties:
+        sku:
+          type: string
+        qty:
+          type: integer
+    StockList:
+      type: object
+      required:
+        - warehouse
+        - skus
+      properties:
+        warehouse:
+          type: string
+        skus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StockLine"

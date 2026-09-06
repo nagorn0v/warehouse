@@ -1,0 +1,58 @@
+include:
+  - docker-compose.infra.yml
+
+services:
+  # Dev-переопределения: Dockerfile.dev (debugpy), DEBUG=true,
+  # проброс debugpy-порта, монтирование alembic/ для сохранения ревизий.
+  # Запуск: docker compose -f docker-compose.dev.yml up -d
+  inventory_api:
+    build:
+      context: ./inventory_api
+      dockerfile: Dockerfile.dev
+    container_name: warehouse-inventory-api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${INVENTORY_DB_USER}:${INVENTORY_DB_PASSWORD}@postgres-inventory:5432/${INVENTORY_DB_NAME}
+      REDIS_URL: ${REDIS_URL}
+      WAIT_FOR_HOSTS: postgres-inventory:5432 redis:6379
+      DEBUG: "true"
+    ports:
+      - "8080:8080"
+      - "5678:5678"
+    volumes:
+      - ./inventory_api/alembic:/app/alembic
+    depends_on:
+      postgres-inventory:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m inventory_api.main
+    networks:
+      - warehouse-net
+
+  analytics_worker:
+    build:
+      context: ./analytics_worker
+      dockerfile: Dockerfile.dev
+    container_name: warehouse-analytics-worker
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASSWORD}@postgres-analytics:5432/${ANALYTICS_DB_NAME}
+      REDIS_URL: ${REDIS_URL}
+      CONSUMER_GROUP: ${CONSUMER_GROUP}
+      CONSUMER_NAME: ${CONSUMER_NAME}
+      BATCH_SIZE: ${BATCH_SIZE}
+      BLOCK_MS: ${BLOCK_MS}
+      WAIT_FOR_HOSTS: postgres-analytics:5432 redis:6379
+      DEBUG: "true"
+    ports:
+      - "8081:8080"
+      - "5679:5678"
+    volumes:
+      - ./analytics_worker/alembic:/app/alembic
+    depends_on:
+      postgres-analytics:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python -m analytics_worker.worker
+    networks:
+      - warehouse-net

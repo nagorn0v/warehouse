@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dev inventory_api (5678)",
+      "type": "debugpy",
+      "request": "attach",
+      "host": "127.0.0.1",
+      "port": 5678,
+      "pathMappings": [
+        { "localRoot": "${workspaceFolder}/inventory_api/src", "remoteRoot": "/app/src" }
+      ]
+    },
+    {
+      "name": "Dev analytics_worker (5679)",
+      "type": "debugpy",
+      "request": "attach",
+      "host": "127.0.0.1",
+      "port": 5679,
+      "pathMappings": [
+        { "localRoot": "${workspaceFolder}/analytics_worker/src", "remoteRoot": "/app/src" }
+      ]
+    },
+    {
+      "name": "Attach inventory tests (5678)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": { "host": "127.0.0.1", "port": 5678 },
+      "justMyCode": false,
+      "pathMappings": [
+        { "localRoot": "${workspaceFolder}/inventory_api/src", "remoteRoot": "/app/src" },
+        { "localRoot": "${workspaceFolder}/inventory_api/tests", "remoteRoot": "/app/tests" }
+      ]
+    },
+    {
+      "name": "Attach analytics tests (5679)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": { "host": "127.0.0.1", "port": 5679 },
+      "justMyCode": false,
+      "pathMappings": [
+        { "localRoot": "${workspaceFolder}/analytics_worker/src", "remoteRoot": "/app/src" },
+        { "localRoot": "${workspaceFolder}/analytics_worker/tests", "remoteRoot": "/app/tests" }
+      ]
+    }
+  ]
+}
